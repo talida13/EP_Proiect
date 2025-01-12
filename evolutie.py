@@ -8,9 +8,28 @@ def initializarea_populatiei(dimensiune_populatie, dimensiune_cromozom):
 
 # functia de fitness
 def fitness(cromozom, retea, X_train, y_train):
+    #PO
     predictii = retea.propagare_inainte(X_train, cromozom)
-    eroare = np.mean((y_train - predictii) ** 2)
-    return -eroare
+    #P1
+    suma_erori = 0
+    #P2
+    numar_elem = len(X_train)
+    #P3
+    for i in range(numar_elem):
+        #P4
+        eroare = 0
+        #P5
+        for j in range(len(y_train[i])):
+            #P6
+            diferenta = y_train[i][j] - predictii[i][j]
+            #P7
+            eroare += diferenta ** 2
+            #P8
+        suma_erori += eroare
+        #P9
+    mse = suma_erori / numar_elem 
+    #P10
+    return -mse
 
 
 
@@ -44,12 +63,21 @@ def mutatie(cromozom, rata_mutatie=0.1):
 
 # algoritmul genetic
 
-def algoritm_genetic(retea, X_train, y_train, dimensiune_populatie=50, generatii=100, rata_mutatie=0.1):
+def algoritm_genetic(retea, X_train, y_train, dimensiune_populatie=50, generatii=100, rata_mutatie=0.1, prag_convergenta=1e-6):
     fitness_rezultate = []
     populatie = initializarea_populatiei(dimensiune_populatie, retea.dimensiune_cromozom)
 
+    fitness_maxim_anterior = float('-inf')  
+
     for generatie in range(generatii):
         fitness_rezultate = [fitness(cromozom, retea, X_train, y_train) for cromozom in populatie]
+
+        fitness_maxim_curent = max(fitness_rezultate)
+        if abs(fitness_maxim_curent - fitness_maxim_anterior) < prag_convergenta:
+            print(f"Algoritmul a convergent la generația {generatie} cu fitness maxim: {fitness_maxim_curent}")
+            break
+
+        fitness_maxim_anterior = fitness_maxim_curent
         noua_populatie = []
         for _ in range(dimensiune_populatie // 2):
             parinte1, parinte2 = selectie_parinti(populatie, fitness_rezultate)
@@ -58,5 +86,7 @@ def algoritm_genetic(retea, X_train, y_train, dimensiune_populatie=50, generatii
             copil2 = mutatie(copil2, rata_mutatie)
             noua_populatie.append(copil1)
             noua_populatie.append(copil2)
+
         populatie = noua_populatie
+
     return populatie[np.argmax(fitness_rezultate)]
